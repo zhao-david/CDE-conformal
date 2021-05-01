@@ -14,7 +14,7 @@ setup(name='local_conformal',
       license='MIT',
       packages=['local_conformal'],
       install_requires=[
-          'numpy', 'pandas', # base libraries
+          'numpy', 'pandas', 'scipy', # base libraries
           'progressbar2', 'matplotlib', # this line is less "needed"
           'nnkcde', 'cde_diagnostics'
       ],
