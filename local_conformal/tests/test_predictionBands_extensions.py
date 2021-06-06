@@ -72,8 +72,9 @@ def test_profile_grouping():
     model_static, g1_static, g2_static = \
         lc.profile_grouping(profile_train=X_static,
                          profile_test=X2_static,k=k, random_state=1000)
-    assert np.all(g1_static == np.array([1]*5+[0]*5)), \
-        "static: 2 kmeans opperates correctly"
+    assert np.all(g1_static == np.array([1]*5+[0]*5)) or \
+           np.all(g1_static == np.array([0]*5+[1]*5)), \
+        "static: 2 kmeans operates correctly"
     assert np.all(g2_static == np.array([1,0])), \
         "static: new points classified correctly"
     assert np.all(model_static.cluster_centers_ == np.array([[10,10],[0,0]])),\
