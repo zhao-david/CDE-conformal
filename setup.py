@@ -18,6 +18,5 @@ setup(name='local_conformal',
           'progressbar2', 'matplotlib', # this line is less "needed"
           'nnkcde', 'cde_diagnostics'
       ],
-      test_suite='nose.collector',
-      test_require=['nose'],
+      test_require=['pytest'],
       zip_safe=False)

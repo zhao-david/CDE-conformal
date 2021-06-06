@@ -9,9 +9,9 @@ def test_find_interval():
     value_na = 4
     value_mid = 7
     value_na2 = 11
-    out1 = lc.find_interval(grid, value_na)
-    out2 = lc.find_interval(grid, value_mid)
-    out3 = lc.find_interval(grid, value_na)
+    out1 = lc.hpd_process._find_interval(grid, value_na)
+    out2 = lc.hpd_process._find_interval(grid, value_mid)
+    out3 = lc.hpd_process._find_interval(grid, value_na)
 
     assert np.isnan(out1), \
         "expect value beyond grid to return NA (below)"
@@ -20,6 +20,16 @@ def test_find_interval():
     assert out2 == 2,\
         "7 should be in the bin [7,8)"
 
+
+    values = np.array([value_na, value_mid, value_na2])
+
+    out_all = lc.find_interval(grid, values)
+    assert np.isnan(out_all[0]), \
+        "expect value beyond grid to return NA (below)"
+    assert np.isnan(out_all[2]), \
+        "expect value beyond grid to return NA (above)"
+    assert out_all[1] == 2,\
+        "7 should be in the bin [7,8)"
 
 def test_inner_hpd_value_level():
     """test inner_hpd_value_level, basic"""
@@ -101,3 +111,31 @@ def test_hpd_coverage():
     assert np.all([np.isclose(out2[ii], np.array([.89, .92])[ii]) for ii in [0,1]]), \
         "errors in hpd_coverage, ordering approach"
 
+
+def test_profile_density():
+    """test profile density, basic"""
+
+    cdes = np.array([.09,.24,.3,.26,.11])
+    z_delta = 1
+    t_grid = np.array([.08, .1, .26,.3, .4,.5])
+
+    info_out = lc.hpd_process._profile_density(cdes, t_grid, z_delta)
+
+    assert np.all(info_out == np.array([0, .09, .09+.11+.24+.26, 1,1,1])), \
+        "expected _profile_density function incorrect on basic example"
+
+
+    cdes_mat = np.array([[.09,.24,.3,.26,.11],
+                    [.3,.26,.25,.11,.08]])
+    t_grid = np.array([.08, .1, .26,.3, .4,.5])
+
+    info_out_mat = lc.profile_density(cdes_mat, t_grid, z_delta)
+
+
+    assert np.all(info_out_mat[0,:] == \
+                  np.array([0, .09, .09+.11+.24+.26, 1,1,1])), \
+        "expected profile_density function incorrect on basic example"
+
+    assert np.all(info_out_mat[1,:] == \
+                  np.array([.08, .08, .08+.11+.25+.26, 1,1,1])), \
+        "expected profile_density function incorrect on basic example (ordered)"

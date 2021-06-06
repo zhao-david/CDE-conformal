@@ -1,15 +1,19 @@
 CDE-conformal and ``local_conformal`` package
 =============================================
 
-Using ``nosetests``
+Using ``pytest``
 ===================
 
-To test the code, you'll need to first download nose
+To test the code, you'll need to first download ``pytest``
 
 .. code-block:: bash
 
-  conda install nose
+  conda install pytest # running tests
+  conda install pytest-cov # code coverage
 
-Then you can run ``nosetests`` in the project directory to test of the functions
+
+Then you can run ``pytest`` in the project directory to test of the functions,
+and ``pytest --cov=local_conformal tests/`` to get the coverage (run in
+``local_conformal`` directory).
 
 
