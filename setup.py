@@ -16,7 +16,7 @@ setup(name='local_conformal',
       install_requires=[
           'numpy', 'pandas', 'scipy', # base libraries
           'progressbar2', 'matplotlib', # this line is less "needed"
-          'nnkcde', 'cde_diagnostics' # not sure nnkcde is still needed...
+          'cde_diagnostics'
       ],
       test_require=['pytest'],
       zip_safe=False)
