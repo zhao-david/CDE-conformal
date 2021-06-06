@@ -21,4 +21,4 @@ comment:
 
 
 ignore:
-  "test_*.py"
+  "*/test_*.py"
