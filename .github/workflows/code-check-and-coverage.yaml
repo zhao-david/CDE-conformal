@@ -43,7 +43,7 @@ jobs:
         run: |
             pip install pytest
             pip install pytest-cov
-            pytest --cov=./ --cov-report=xml
+            pytest --cov=./local_conformal/. --cov-report=xml
       - name: Code coverage
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         uses: codecov/codecov-action@v1
