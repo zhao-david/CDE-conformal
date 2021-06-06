@@ -35,12 +35,14 @@ jobs:
         run: |
           pip install pytest
           pip install pytest-cov
+          pip install ./local_conformal
           pytest local_conformal/tests/
       - name: Save coverage only once
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         run: |
             pip install pytest
             pip install pytest-cov
+            pip install ./local_conformal
             pytest local_conformal/tests/ --cov=./ --cov-report=xml
       - name: Code coverage
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
