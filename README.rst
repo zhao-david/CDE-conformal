@@ -13,8 +13,8 @@ CDE-conformal and ``local_conformal`` package
    :target: https://www.codefactor.io/repository/github/benjaminleroy/cde-conformal
    :alt: CodeFactor
 
-Using ``pytest``
-===================
+Using ``pytest`` locally
+========================
 
 To test the code, you'll need to first download ``pytest``
 
