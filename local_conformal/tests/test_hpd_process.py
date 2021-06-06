@@ -55,7 +55,7 @@ def test_inner_hpd_value_level():
         "expected z_values outside the grid to return 0 hpd values (upper)"
 
     # Original (explicit order)
-    same_order = np.array([0,4,1,3,2], dtype = np.int)
+    same_order = np.array([0,4,1,3,2], dtype = int)
     out1 = lc.inner_hpd_value_level(cdes, z_grid, z_test, z_delta,
                           order= same_order)
     assert out1 == .7, \
@@ -76,7 +76,7 @@ def test_inner_hpd_value_level():
 
 
     # new order
-    new_order = np.arange(5, dtype = np.int)
+    new_order = np.arange(5, dtype = int)
     out1 = lc.inner_hpd_value_level(cdes, z_grid, z_test, z_delta,
                           order= new_order)
     assert np.isclose(out1, .89), \
