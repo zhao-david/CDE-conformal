@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install pytest
           pip install pytest-cov
-          pwd
+          pip install nnkcde
           pip install .
           pytest tests
       - name: Save coverage only once
@@ -43,6 +43,7 @@ jobs:
         run: |
             pip install pytest
             pip install pytest-cov
+            pip install nnkcde
             pip install .
             pytest local_conformal/tests/ --cov=./ --cov-report=xml
       - name: Code coverage
