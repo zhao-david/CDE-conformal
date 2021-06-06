@@ -7,6 +7,9 @@ CDE-conformal and ``local_conformal`` package
 .. |Codecov| image:: https://codecov.io/gh/benjaminleroy/CDE-conformal/branch/main/graph/badge.svg
   :target: https://codecov.io/gh/benjaminleroy/CDE-conformal
 
+.. image:: https://www.codefactor.io/repository/github/benjaminleroy/cde-conformal/badge
+   :target: https://www.codefactor.io/repository/github/benjaminleroy/cde-conformal
+   :alt: CodeFactor
 
 Using ``pytest``
 ===================
