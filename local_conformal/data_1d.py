@@ -53,7 +53,7 @@ def data_generation(n, sigma_num = 4):
 
     # x and group values:
     group_list = []
-    for idx in np.arange(num_groups, dtype = np.int):
+    for idx in np.arange(num_groups, dtype = int):
         group_list += [idx]*n
 
     group_info = np.array(group_list)
@@ -73,17 +73,17 @@ def data_generation(n, sigma_num = 4):
                    my_bimodal]
 
     y_generate_all = []
-    for sigma_idx in np.arange(sigma_num , dtype = np.int):
+    for sigma_idx in np.arange(sigma_num , dtype = int):
         current_sigma = sigma_values[sigma_idx]
-        for f_idx in np.arange(4, dtype = np.int):
+        for f_idx in np.arange(4, dtype = int):
 
             y_generate_all += [lambda n : current_sigma.copy() * y_generate_base.copy()[f_idx](n)]
 
 
     y_list = []
-    for sigma_idx in np.arange(sigma_num , dtype = np.int):
+    for sigma_idx in np.arange(sigma_num , dtype = int):
         current_sigma = sigma_values[sigma_idx]
-        for f_idx in np.arange(4, dtype = np.int):
+        for f_idx in np.arange(4, dtype = int):
             current_function = lambda n : current_sigma * y_generate_base[f_idx](n)
             y_list += list(current_function(n))
     y = np.array(y_list)
