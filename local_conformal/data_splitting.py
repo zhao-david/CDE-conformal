@@ -26,7 +26,7 @@ def stratified_data_splitting(data, group_col = "group_info",
     n_out = prop_vec.shape[0]
     n_groups = len(list_group_info)
     list_data = []
-    for group_idx in np.arange(n_groups, dtype = np.int):
+    for group_idx in np.arange(n_groups, dtype = int):
         inner_nrow = list_group_info[group_idx].shape[0]
         inner_row_vec = np.random.choice(inner_nrow, size = inner_nrow,
                                          replace = False)
@@ -34,7 +34,7 @@ def stratified_data_splitting(data, group_col = "group_info",
         inner_group_vec = np.random.choice(n_out, size = inner_nrow,
                                            p = prop_vec)
 
-        for split_idx in np.arange(n_out, dtype = np.int):
+        for split_idx in np.arange(n_out, dtype = int):
             #ipdb.set_trace()
             current_data = list_group_info[group_idx].iloc[
                 np.array(inner_row_vec[inner_group_vec == split_idx],
