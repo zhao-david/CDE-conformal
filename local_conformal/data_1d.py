@@ -36,8 +36,8 @@ def data_generation(n, sigma_num = 4):
 
     and we scale the sigmas by 4^(0:sigma_num)
 
-    Args:
-    -----
+    Arguments:
+    ----------
     n : int, number of y values for each group
     sigma_num : int, number of sigma groups
 
