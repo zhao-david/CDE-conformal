@@ -43,13 +43,12 @@ jobs:
         run: |
             pip install pytest
             pip install pytest-cov
-            cd ./local_conformal
-            pytest --cov=local_conformal . --cov-report=xml
+            pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml local_conformal/tests
       - name: Code coverage
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         uses: codecov/codecov-action@v1
         with:
-          files: local_coverage/coverage.xml
+          files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Wemake Python Styleguide
         uses: wemake-services/wemake-python-styleguide@0.13.4

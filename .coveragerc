@@ -1,0 +1,2 @@
+[run]
+omit = local_conformal/tests/*, local_conformal/__init__.py
