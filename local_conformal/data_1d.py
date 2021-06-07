@@ -32,9 +32,9 @@ def data_generation(n, sigma_num = 4):
     (1) N(1,1),
     (2) Unif(1-sqrt(3), 1+sqrt(3))
     (3) Exp(1)
-    or (4) 0.5N(0.25,0.4375) + 0.5N(1.75,0.4375),
+    or (4) 0.5N(0.1,var = 0.2) + 0.5N(1.9, var = 0.2),
 
-    and we scale the sigmas by 4^(0:sigma_num)
+    and we scale the sigmas and means by 4^(0:sigma_num)
 
     Arguments:
     ----------

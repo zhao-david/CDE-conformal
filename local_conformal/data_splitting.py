@@ -38,7 +38,7 @@ def stratified_data_splitting(data, group_col = "group_info",
             #ipdb.set_trace()
             current_data = list_group_info[group_idx].iloc[
                 np.array(inner_row_vec[inner_group_vec == split_idx],
-                         dtype = np.int)]
+                         dtype = int)]
             if group_idx == 0:
                 list_data.append(current_data)
             else:
