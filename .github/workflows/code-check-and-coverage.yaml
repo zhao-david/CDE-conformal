@@ -39,6 +39,11 @@ jobs:
           pip install pytest-cov
           pip install .
           pytest
+      - name: check location
+        run: ls
+      - name: check location 2
+        run: ls
+        working-directory: ./local_conformal
       - name: Save coverage only once
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         run: |
