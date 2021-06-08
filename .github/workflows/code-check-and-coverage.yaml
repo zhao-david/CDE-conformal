@@ -50,7 +50,8 @@ jobs:
             pip install pytest
             pip install pytest-cov
             pip install .
-            pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml local_conformal/tests
+            pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml tests
+        working-directory: ./local_conformal
       - name: Code coverage
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         uses: codecov/codecov-action@v1
