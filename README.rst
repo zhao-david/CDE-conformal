@@ -13,6 +13,20 @@ CDE-conformal and ``local_conformal`` package
    :target: https://www.codefactor.io/repository/github/benjaminleroy/cde-conformal
    :alt: CodeFactor
 
+Downloading of package
+======================
+
+To download the package you'll need to clone the repo to your computer then run
+
+.. code-block:: bash
+
+    pip install -r requirements.txt
+    pip install .
+
+
+You have to do both of these as ``pytorch`` is not on pip.
+
+
 Using ``pytest`` locally
 ========================
 
