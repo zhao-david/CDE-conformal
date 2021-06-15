@@ -17,7 +17,7 @@ setup(name='local_conformal',
           'numpy', 'pandas', 'scipy', # base libraries
           'progressbar2', 'matplotlib', # this line is less "needed"
           'cde_diagnostics', # david's package
-          'torch', 'torch-distributions', # pytorch
+          'torch', # pytorch
           'plotnine', 'Pillow', 'warnings' # for useful plotnine extensions
       ],
       test_require=['pytest'],
