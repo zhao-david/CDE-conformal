@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def _find_interval(grid, value):
+def _find_interval(grid, value, le = True):
     """
     find index that value falls on the 1d grid
 
@@ -9,20 +9,25 @@ def _find_interval(grid, value):
     ----------
     grid: an ordered numpy vector of values
     value: scalar which we are looking to find where it fits.
+    le : boolean. if true, then grid is of values [a,b) style, if false,
+        is (a,b] style
 
     Returns:
     --------
-        index of grid which value is within [a,b) style.
+        index of grid which value is within specified bins
     """
     if (grid[0] > value) | \
        (grid[grid.shape[0]-1] < value):
         return np.nan
 
-    idx = np.sum(grid <= value) - 1
+    if le:
+        idx = np.sum(grid <= value) - 1
+    else:
+        idx = np.sum(grid < value)
 
     return idx
 
-def find_interval(grid, values):
+def find_interval(grid, values, le = True):
     """
     vectorized version of _find_interval (find index that value falls
     on the 1d grid)
@@ -31,12 +36,14 @@ def find_interval(grid, values):
     ----------
     grid: an ordered numpy vector of values
     values: numpy array which we are looking to find where they fits.
+    le : boolean. if true, then grid is of values [a,b) style, if false,
+        is (a,b] style
 
     Returns:
     --------
         index of grid which each value is within [a,b) style.
     """
-    out = [_find_interval(grid, value) for value in values]
+    out = [_find_interval(grid, value, le = le) for value in values]
     return out
 
 def inner_hpd_value_level(cdes, z_grid, z_test, z_delta, order = None):
@@ -82,11 +89,13 @@ def hpd_coverage(cdes, z_grid, z_test, order = None):
 
     Arguments:
     ----------
-    cdes: a numpy array of conditional density estimates;
-        each row corresponds to an observation, each column corresponds to a grid
-        point
-    z_grid: a numpy array of the grid points at which cde_estimates is evaluated
-    z_test: a numpy array of the true z values corresponding to the rows of cde_estimates
+    cdes: a numpy array (n, m) of conditional density estimates;
+        each row corresponds to an observation, each column corresponds to a
+        grid point
+    z_grid: a numpy vector (m,) of the grid points at which cde_estimates is
+        evaluated
+    z_test: a numpy vector (n, ) of the true z values corresponding to the
+        rows of cde_estimates
 
     Returns:
     --------
@@ -191,3 +200,79 @@ def profile_density(cde_mat, t_grid, z_delta):
         out_mat[i,:] = _profile_density(cde_mat[i,:], t_grid, z_delta)
 
     return out_mat
+
+
+
+def true_thresholds_out(true_cde, z_delta, expected_prop):
+    """
+    calculates thresholds for the cde to get desired HPD value
+
+    Arguments:
+    ----------
+    true_cde: numpy array (n, d) array of cde values for a range of y values
+        conditional on a x value (the row value)
+    z_delta : float, space between y values (assumed equally spaced y values)
+    expected_prop : numpy vector (p, ) of proportion of mass values desired
+        to be contained
+
+    Returns:
+    --------
+        threshold_mat : numpy array (n, p). For each row, we have the cde
+            thresholds that would allow expected_prop[j] mass to be contained
+            above this amount
+    """
+
+    # Todo: there must be other functions that will basically do the HDP mapping - then just get the reverse...
+
+    n_row = true_cde.shape[0]
+
+    threshold_mat = -1 * np.ones((n_row, expected_prop.shape[0]))
+
+    for r_idx in np.arange(n_row):
+        threshold_mat[r_idx,:] = _true_thresholds_out(cdes = true_cde[r_idx,:].ravel(),
+                                                      z_delta = z_delta,
+                                                      expected_prop = expected_prop)
+
+
+    return threshold_mat
+
+def _true_thresholds_out(cdes, z_delta, expected_prop):
+    """
+    calculates thresholds for the cde to get desired HPD value
+
+    Arguments:
+    ----------
+    cdes: numpy vector (d, ) array of cde values for a range of y values
+        conditional on a x value (the row value)
+    z_delta : float, space between y values (assumed equally spaced y values)
+    expected_prop : numpy vector (p, ) of proportion of mass values desired
+        to be contained
+
+    Returns:
+    --------
+        threshold_vec : numpy vector (p, ). For each row, we have the cde
+            thresholds that would allow expected_prop[j] mass to be contained
+            above this amount
+    """
+    v2 = cdes.copy()
+    order = v2.argsort()[::-1]
+    v2 = v2[order]
+    v2s = ((v2.cumsum())*z_delta) #down the mass
+
+    order_mass = find_interval(v2s, expected_prop, le = False)
+
+    threshold_vec = np.zeros(len(order_mass))
+
+    above = np.logical_and(np.isnan(order_mass), expected_prop > v2s.max())
+
+
+    for i in np.arange(len(order_mass)):
+        if not np.isnan(order_mass[i]):
+            threshold_vec[i] = v2[order_mass[i]]
+        elif above[i]:
+            threshold_vec[i] = 0
+        else: # below
+            threshold_vec[i] = v2.max()
+            #^this was done preserve structure if z_delta isn't a perfect input
+
+    return threshold_vec

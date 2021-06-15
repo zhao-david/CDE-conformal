@@ -66,8 +66,9 @@ def test_data_generation():
 
     means4["sigma"] = 4**np.repeat(np.arange(4),4)
 
-    assert np.all(np.abs(means4.y -means4.sigma)/ means4.sigma < .02), \
-        "each group's mean should be close to sigma value (4^sigma grouping)"
+    assert np.all(np.abs(means4.y - 1)/means4.sigma < .02), \
+        "each group's mean should be close to 1 "+\
+        "(this check is weak - scaled by sigma)"
 
     stds4 = data_4.groupby("group_info", as_index=False).std()
     stds4["sigma"] = 4**np.repeat(np.arange(4),4)

@@ -139,3 +139,47 @@ def test_profile_density():
     assert np.all(info_out_mat[1,:] == \
                   np.array([.08, .08, .08+.11+.25+.26, 1,1,1])), \
         "expected profile_density function incorrect on basic example (ordered)"
+
+
+def test___true_thresholds_out():
+    """
+    basic tests of _true_thresholds_out function
+    """
+    cdes = np.array([.09,.24,.3,.26,.11])
+    z_delta = 1.0
+    expected_prop = np.array([.08,.3, .55, .56,.57,1-.21, 1.1])
+
+    thresholds_out = lc.hpd_process._true_thresholds_out(cdes, z_delta,
+                                                         expected_prop)
+
+    assert np.all(thresholds_out == np.array([.3, .3, .26,.26, .24,.24, 0])), \
+        "static thresholds don't match"
+
+    cdes2 = np.array([.09,.24,.3,.26,.11])*2
+    z_delta2 = .5
+    expected_prop2 = np.array([.08,.3, .55, .56,.57,1-.21, 1.1])
+
+    thresholds_out2 = lc.hpd_process._true_thresholds_out(cdes2, z_delta2,
+                                                          expected_prop2)
+
+    assert np.all(thresholds_out2 == np.array([.3, .3, .26,.26, .24,.24, 0])*2), \
+        "static thresholds don't match with non-one z_delta"
+
+
+def test_true_thresholds_out():
+    """
+    test true_treshold_out, basic
+    """
+
+    cde_mat = np.array([[.09,.24,.3,.26,.11],
+                       [.1,.11,.12,.13,.095]])
+    z_delta = 1.0
+    expected_prop = np.array([.08,.3, .55, .56,.57,1-.21, 1.1])
+
+    t_out = lc.true_thresholds_out(cde_mat, z_delta, expected_prop)
+
+    assert np.all(t_out == np.array([[.3, .3, .26,.26, .24,.24, 0],
+                                     [.13, .11, .095, 0,0,0,0]])), \
+        "basic threshold checks across multiple rows errored"
+
+
