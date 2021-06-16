@@ -46,7 +46,7 @@ jobs:
         run: |
           pip install pytest
           pip install pytest-cov
-          pip install -r requirements.txt # to deal with torch
+          pip install -r ../requirements.txt # to deal with torch
           pip install ../.
           pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml tests
         working-directory: ./local_conformal
