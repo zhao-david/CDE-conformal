@@ -33,25 +33,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt # to deal with torch
+          sudo apt install libatlas-base-dev
           pip install .
       - name: Test with pytest
         run: |
           pip install pytest
           pip install pytest-cov
+          pip install -r requirements.txt # to deal with torch
           pip install .
           pytest
-      - name: check location
-        run: ls
-      - name: check location 2
-        run: ls
-        working-directory: ./local_conformal
       - name: Save coverage only once
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
         run: |
-            pip install pytest
-            pip install pytest-cov
-            pip install ../.
-            pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml tests
+          pip install pytest
+          pip install pytest-cov
+          pip install -r requirements.txt # to deal with torch
+          pip install ../.
+          pytest --cov=local_conformal --cov-config=.coveragerc --cov-report=xml tests
         working-directory: ./local_conformal
       - name: Code coverage
         if: runner.os == "Linux" & ${{matrix.python-verson == 3.6}}
