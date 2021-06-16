@@ -45,3 +45,48 @@ def thresholds_per_group(g_df, desired_props, append = None):
     threshold_mat = np.array(ljoined.drop(columns = "grouping"))
 
     return (threshold_mat, cs_info)
+
+
+def average_within_groups(group_vec, info_mat, quantiles=None):
+    """
+    utilization function to take the average value for each column conditional
+    on a group vector
+
+    ********also remember we want to average across TRUE GROUPS! *******
+
+    Arguments:
+    ----------
+    group_vec : numpy vector (n, ) probably integers / object based to indicate
+        discrete classes
+    info_mat : numpy array (n, p) rows correspond to group_vec's entries
+    quantiles : numpy array (p, ) associated quantiles for each column in
+        info_mat (if None converted, a integer vector is used)
+
+    Returns:
+    --------
+    tuple of
+        mean_info : pandas data frame (n_groups, p+1) of means per column and
+            a groups column
+        mean_info_pivot_longer : pandas data frame (n_groups*p, 3) each row
+            tells us the group number, the quantile value and the mean value
+    """
+
+    if quantiles is None:
+        quantiles = np.arange(info_mat.shape[1], dtype = int)
+
+    col_names = np.array([str(q) for q in quantiles])
+
+    g_df = pd.DataFrame(data = {"grouping": group_vec})
+    info_df = pd.DataFrame(info_mat, columns = col_names)
+    df_combined = pd.concat([g_df.reset_index(drop = True),
+                             info_df.reset_index(drop = True)],
+                           axis = 1)
+
+    mean_info = df_combined.groupby("grouping").mean().reset_index()
+
+    mean_info_pivot_longer = mean_info.melt(id_vars = "grouping",
+                                            value_vars = col_names,
+                                            var_name = "quantile",
+                                            value_name = "means")
+
+    return mean_info, mean_info_pivot_longer

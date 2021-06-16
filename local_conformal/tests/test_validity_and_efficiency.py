@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import local_conformal as lc
 
 def test_difference_validity_and_efficiency():
@@ -30,3 +31,29 @@ def test_difference_validity_and_efficiency():
     #true_grid vs 1*(predict_grid <= np.repeat(thresholds_predict, 4, axis =1))
     assert np.all(out_e == np.array([.25, 0,.25, .5, .5]).reshape((-1,1))), \
         "efficiency error in statistic test is incorrect (set diff incorrect)"
+
+
+def test_difference_actual_validity():
+    """
+    test difference_actual_validity, basic
+    """
+
+    df_test = pd.DataFrame(data = {"cs": np.array([.1,.3,.2,.4,-1,1.1])})
+    t_mat = np.array([[0, .1, .2],
+                      [-.1,0,.1],
+                      [.4,1,.1],
+                      [.4,1,1.2],
+                      [.4,1,1.2],
+                      [-.4,1,1.2]])
+    expected = np.array([[True, True, False],
+                  [True,True,True],
+                  [False,False,True],
+                  [True,False,False],
+                  [False,False,False],
+                  [True,True,False]])
+
+
+    out = lc.difference_actual_validity(df_test, t_mat)
+
+    assert np.all(out == expected), \
+        "binary array for comparison with thresholds is incorrect"

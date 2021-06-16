@@ -223,7 +223,7 @@ def tune_first_nn(x_train, y_train, x_val, y_val,
 
     Returns:
     --------
-    tuned model, associated optimizer, and validation error
+    tuned model, associated optimizer, training error and validation error
     """
     # model creation if necessary ------
     if model_op_list is None:
@@ -250,11 +250,13 @@ def tune_first_nn(x_train, y_train, x_val, y_val,
         loss.backward()
         optimizer.step()
 
+    pi, mu, sigma = model(x_train)
+    train_error = model.loss_fn(y_train,  pi, mu, sigma)
     # get validation error -------
     pi_v, mu_v, sigma_v = model(x_val)
-    error = model.loss_fn(y_val, pi_v, mu_v, sigma_v)
+    val_error = model.loss_fn(y_val, pi_v, mu_v, sigma_v)
 
-    return model, optimizer, error
+    return model, optimizer, train_error, val_error
 
 
 
@@ -359,7 +361,7 @@ def tune_second_nn(x_train, y_train, x_val, y_val,
 
     Returns:
     --------
-    tuned model, associated optimizer, and validation error
+    tuned model, associated optimizer, training error, and validation error
     """
     # model creation if necessary ------
     if model_op_list is None:
@@ -386,11 +388,14 @@ def tune_second_nn(x_train, y_train, x_val, y_val,
         loss.backward()
         optimizer.step()
 
+    preds = model(x_val)
+    train_error = model.loss_fn(preds, y_train)
+
     # get validation error -------
     preds_v = model(x_val)
-    error = model.loss_fn(preds_v, y_val)
+    val_error = model.loss_fn(preds_v, y_val)
 
-    return model, optimizer, error
+    return model, optimizer, train_error, val_error
 
 
 

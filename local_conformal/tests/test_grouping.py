@@ -38,3 +38,28 @@ def test_thresholds_per_group():
     for o_idx in [2,4,6,7]:
         assert np.all(threshold_mat2[o_idx,:] == ones_vec), \
             "row %i of static threshold_mat2 doesn't meet expectations" % o_idx
+
+
+def test_average_within_groups():
+    "test average_within_groups, basic - just structure"
+    g_vec =  np.array([0,0,2,0,2,0,2,2])
+    g_df = pd.DataFrame(data = {"grouping": g_vec})
+    quantiles = np.arange(1,5)/5
+
+    np.random.seed(1)
+    info_mat = np.random.uniform(0,1, size = 8*4).reshape((8,-1))
+
+    mi, mipl = lc.average_within_groups(g_vec, info_mat, quantiles)
+
+    assert np.all([x in [0,2] for x in mi.grouping]) and \
+        np.all([x in [0,2] for x in mipl.grouping]), \
+        "expect only group indices that match the group vector"
+
+    assert mi.shape == (2, 4+1) and \
+        np.all(mi.columns == ["grouping"] + [str(q) for q in quantiles]), \
+        "expect mean_info df to have shape and columns as in as in doc"
+
+    assert mipl.shape == (2*4,3) and \
+        np.all(mipl.columns == ["grouping", "quantile", "means"]), \
+        "expected mean_info_pivot_longer df to have shape and columns as in doc"
+

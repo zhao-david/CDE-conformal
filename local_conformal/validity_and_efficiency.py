@@ -124,3 +124,28 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
 
 
     return validity_error, efficiency_error
+
+
+
+def difference_actual_validity(df_cs_test, thresholds_mat_test):
+    """
+    This function should return a binary matrix relative to the groupings
+    and whether or not each true cs(y|x) is above the group conformal threshold
+
+    Arguments:
+    ----------
+    df_cs_test : pandas df  (n, 3) with columns at least "cs"
+    thresholds_mat_test : matrix (n, p) cutoffs per row of df_cs_test relative
+        to previously defined quantile cutoffs
+
+    Returns:
+    --------
+    binary_mat : boolean numpy array (n, p) if the observation has a cs scores
+        great than or equal to the quantile cutoff for the associated group
+    """
+    n_quant = thresholds_mat_test.shape[1]
+    cs_only = np.array(df_cs_test.cs).reshape((-1,1))
+
+    binary_mat = np.repeat(cs_only,n_quant, axis = 1) >= thresholds_mat_test
+
+    return binary_mat
