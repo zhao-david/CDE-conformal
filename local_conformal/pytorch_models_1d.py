@@ -388,7 +388,7 @@ def tune_second_nn(x_train, y_train, x_val, y_val,
         loss.backward()
         optimizer.step()
 
-    preds = model(x_val)
+    preds = model(x_train)
     train_error = model.loss_fn(preds, y_train)
 
     # get validation error -------

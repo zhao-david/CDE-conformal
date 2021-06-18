@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import local_conformal as lc
 
+
 def test_difference_validity_and_efficiency():
     true_cde = np.ones((5,4))
     predict_grid = np.arange(20).reshape(5,4)
@@ -10,16 +11,20 @@ def test_difference_validity_and_efficiency():
 
 
     true_grid = np.repeat(np.array([1,1,0,0]).reshape((1,-1)),5,axis = 0)
+    df_cs_grouping = pd.DataFrame(data = {"grouping": [1,1,0,1,0],
+                                            "cs": [.5,.5,.5,.5,.5]})
     thresholds_true = np.ones((5,1))
     expected_prop = np.array([.5])
     z_delta = 1/4
 
     #thresholds_true.shape, thresholds_predict.shape, expected_prop.shape
-    out_v, out_e = lc.difference_validity_and_efficiency(true_cde = true_cde,
+    out_v, out_v2, out_e = lc.difference_validity_and_efficiency(true_cde = true_cde,
                                                      predict_grid = predict_grid,
                                                      true_grid = true_grid,
                                                      thresholds_predict = thresholds_predict,
                                                      thresholds_true = thresholds_true,
+                                                     df_cs_grouping = df_cs_grouping,
+                                                     true_grouping = None,
                                                      expected_prop = expected_prop,
                                                      z_delta = z_delta,
                                                      verbose = False)

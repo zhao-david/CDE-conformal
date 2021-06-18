@@ -16,6 +16,7 @@ def _find_interval(grid, value, le = True):
     --------
         index of grid which value is within specified bins
     """
+
     if (grid[0] > value) | \
        (grid[grid.shape[0]-1] < value):
         return np.nan
@@ -26,6 +27,58 @@ def _find_interval(grid, value, le = True):
         idx = np.sum(grid < value)
 
     return idx
+
+def _find_interval_bins(grid, value):
+    """
+    find which interval a value is in relative to a grid, grid input is the
+    center of each bins (with width the difference between points)
+
+    Arguments:
+    ----------
+    grid: an ordered numpy vector of values (equally spaced points)
+    values: numpy array which we are looking to find where they fits.
+
+    Returns:
+    --------
+        index of grid which each value is within [a-delta,a+delta) style,
+            where delta is the space between each grid point
+    """
+
+    grid_delta = grid[1] - grid[0]
+    inner_grid = np.array(list(grid.ravel()) + \
+                          [grid[-1] + grid_delta]) - grid_delta/2
+
+    if (inner_grid[0] > value) | \
+       (inner_grid[-1] < value):
+        return np.nan
+
+    idx = np.sum(inner_grid <= value) - 1
+
+    return idx
+
+
+
+
+
+def find_interval_bins(grid, values):
+    """
+    vectorized version of _find_interval_bins (find index that value falls
+    on the 1d grid as centers of bins, for equally spaced grid)
+
+    Arguments:
+    ----------
+    grid: an ordered numpy vector of values (equally spaced points)
+    values: numpy array which we are looking to find where they fits.
+
+    Returns:
+    --------
+        index of grid which each value is within [a-delta,a+delta) style,
+            where delta is the space between each grid point
+    """
+    out = [_find_interval_bins(grid, value) for value in values]
+    return out
+
+
 
 def find_interval(grid, values, le = True):
     """
@@ -66,7 +119,7 @@ def inner_hpd_value_level(cdes, z_grid, z_test, z_delta, order = None):
         HPD value for z_test
     """
 
-    z_idx = _find_interval(z_grid, z_test)
+    z_idx = _find_interval_bins(z_grid, z_test)
 
     if np.isnan(z_idx):
         return 0
@@ -75,7 +128,7 @@ def inner_hpd_value_level(cdes, z_grid, z_test, z_delta, order = None):
     if order is None:
         order = v2.argsort()
 
-    v2_index = (order == z_idx).argmax()
+    v2_index = (order == z_idx).argmax() # I don't think this is right!!!
 
     v2 = v2[order]
     v2s = ((v2.cumsum())*z_delta)
@@ -106,10 +159,10 @@ def hpd_coverage(cdes, z_grid, z_test, order = None):
     n_grid_points = z_grid.shape[0]
 
     if nrow_cde != n_samples:
-        raise ValueError("Number of samples in CDEs should be the same as in z_test."
+        raise ValueError("Number of samples in CDEs should be the same as in z_test. "
                          "Currently %s and %s." % (nrow_cde, n_samples))
     if ncol_cde != n_grid_points:
-        raise ValueError("Number of grid points in CDEs should be the same as in z_grid."
+        raise ValueError("Number of grid points in CDEs should be the same as in z_grid. "
                          "Currently %s and %s." % (nrow_cde, n_grid_points))
 
     z_min = np.min(z_grid)
@@ -121,6 +174,51 @@ def hpd_coverage(cdes, z_grid, z_test, order = None):
             for ii in range(n_samples)]
     return np.array(vals)
 
+def hpd_grid(cde_mat, z_delta):
+    """
+    calculate the hpd grid for a vector of cdes and a z_delta
+
+    Arguments:
+    ----------
+    cde_mat: numpy vector (n,m) grid of cde values (across potential z_grid)
+        for each z value
+    z_delta: distance between z_grid values (assumed constant)
+
+    Returns:
+    --------
+        numpy vector (n ,m) of HPD values
+    """
+    out = -1*np.ones(cde_mat.shape)
+    for r_idx in range(out.shape[0]):
+        out[r_idx,:]  = _hpd_grid(cdes = cde_mat[r_idx,:].ravel(),
+                                  z_delta = z_delta)
+
+    return out
+
+def _hpd_grid(cdes, z_delta):
+    """
+    calculate the hpd grid for a vector of cdes and a z_delta
+
+    Arguments:
+    ----------
+    cdes: numpy vector (m,) grid of cde values (across potential z_grid)
+        for each z value
+    z_delta: distance between z_grid values (assumed constant)
+
+    Returns:
+    --------
+        numpy vector (m, ) of HPD values
+    """
+    v2 = cdes.copy()
+
+    order = v2.argsort()
+
+    v2 = v2[order]
+    v2s = (v2.cumsum())*z_delta
+
+    reorder = np.array([(order == i).argmax() for i in np.arange(cdes.shape[0])])
+
+    return v2s[reorder]
 
 
 def _profile_density(cdes, t_grid, z_delta):
@@ -221,8 +319,6 @@ def true_thresholds_out(true_cde, z_delta, expected_prop):
             thresholds that would allow expected_prop[j] mass to be contained
             above this amount
     """
-
-    # Todo: there must be other functions that will basically do the HDP mapping - then just get the reverse...
 
     n_row = true_cde.shape[0]
 

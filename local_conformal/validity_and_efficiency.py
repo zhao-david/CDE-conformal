@@ -1,10 +1,16 @@
 import numpy as np
+import progressbar
 
-def difference_validity_and_efficiency(true_cde, predict_grid,
+from .grouping import average_within_groups
+
+def difference_validity_and_efficiency(true_cde,
+                                       predict_grid,
                                        true_grid,
                                        thresholds_predict,
                                        thresholds_true,
-                                       expected_prop,
+                                       df_cs_grouping,
+                                       true_grouping = None,
+                                       expected_prop = .5,
                                        z_delta = 1,
                                        verbose = True):
     """
@@ -30,6 +36,13 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
         true_grid scores for each row of the above arrays (`true_cde`,
         `predict_grid`, `true_grid`). The columns are associated with difference
         cutoffs.
+    df_cs_grouping : pandas data.frame (n, 2+) with "cs" and "grouping" columns
+        **NOTE: this grouping should be relative to the model grouping, not
+        true grouping.**
+    true_grouping : numpy vector (n, ) vector of discrete grouping values
+        relative to how to evaluate preformance per groups. **NOTE: this is
+        not the same as the model estimated grouping.** Default of None means
+        this part of the analysis is not done.
     expected_prop : numpy vector (m,). Amount of mass expected to be contained
         in each level set defined by columns of `thresholds`
     z_delta : difference between the range of z values used to create above
@@ -38,14 +51,39 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
 
     Returns:
     --------
-    a tuple with the following info:
+    Depending upon `true_grouping = None` you will recieve either:
+
+    a tuple with the following info (this is observation based (n) ):
         validity_error : numpy array (n, m). For each row (i) of the above numpy
             matrices, we look at the absolute error between the expected_prop
             verse actual mass in the level set. The columns are ranging across
             the different thresholds and expected_prop values.
+        validation_raw_bin_mat : numpy array (n, m). For each row (i) of the
+            above numpy matrices, if the observation has a cs scores
+            great than or equal to the quantile cutoff for the associated group
+            (see `?lc.difference_actual_validity` for more detail)
         efficiency_error : numpy array (n, m). For each row (i) of the above
             numpy matrices, we look at the lebegue measure of the set difference
             between predicted level set and the true level set.
+
+    -OR-
+
+    a tuple with the following info (this is group based (n) ):
+        validity_average : pandas DF (n_groups * m, 3), in the pivot_longer
+            style of a data frame. For each row, we include the "grouping",
+            a "quantile" value, and the "means" (mean) of the absolute error
+            between the expected validity and true density contained in the
+            estimated level set.
+        validity_raw_test_average: pandas DF (n_groups * m, 3), in the
+            pivot_longer style of a data frame. For each row, we include the
+            "grouping",a "quantile" value, and the "means" (mean) of the
+            absolute error between the expected validity and empirical
+            containment for the test observations in the given group.
+        efficiency_average : pandas DF (n_groups * m, 3), in the pivot_longer
+            style of a data frame. For each row, we include the "grouping",
+            a "quantile" value, and the "means" (mean) of the lebegue
+            measure of the set difference between the optimal true level set
+            and the estimated level set.
 
     Details:
     --------
@@ -54,6 +92,10 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
 
     For **validity**: we calculate the discrete probability mass of the
     predicted level set (at each given threshold) related to the expected_prop.
+
+    For **validity_raw**: we calculate the empirical amount of observations
+    that are contained in the given level set (binary if observation based,
+    mean if group based).
 
     For **efficiency**: we calculate the lebegue set difference beween the
     predicted level set vs the true level set (as defined with `true_grid`)
@@ -73,6 +115,15 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
     assert thresholds_predict.shape[0] == true_cde.shape[0], \
         "thresholds_{predict, true} should have the same number of rows as "+\
         "true_cde"
+
+    if true_grouping is not None:
+        assert true_grouping.shape[0] == true_cde.shape[0], \
+            "true_grouping should have the same length as the "+\
+            "true_cde's number of rows"
+
+    assert df_cs_grouping.shape[0] == true_cde.shape[0] and \
+        np.all([name in df_cs_grouping.columns for name in ["cs", "grouping"]]), \
+        "df_cs_grouping should have correct numbeer of rows and desirable column names"
 
     # verbosity design (across thresholds) ---------
     if verbose:
@@ -106,10 +157,6 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
         validity_error[:, t_idx] = np.abs(rowwise_mass - expected_p)
 
 
-        # test validity --------------------
-
-        # TODO
-
         # efficiency: compared to truth optimal set ---------
         threshold_true_vec = thresholds_true[:,t_idx]
 
@@ -122,8 +169,29 @@ def difference_validity_and_efficiency(true_cde, predict_grid,
         rowwise_diff = level_set_diff.sum(axis = 1)
         efficiency_error[:, t_idx] = rowwise_diff * z_delta
 
+    # test validity --------------------
 
-    return validity_error, efficiency_error
+    validation_raw_bin_mat = difference_actual_validity(df_cs_grouping,
+                                                        thresholds_predict)
+
+
+    #
+    # combining across true groups ---------
+    #
+
+    if true_grouping is  None:
+        return validity_error, validation_raw_bin_mat, efficiency_error
+    else:
+        _, validity_average = average_within_groups(true_grouping,
+                                                    validity_error)
+        _, validity_raw_test_average = average_within_groups(true_grouping,
+                                                             validation_raw_bin_mat)
+        _, efficiency_average = average_within_groups(true_grouping,
+                                                      efficiency_error)
+
+
+        return validity_average, validity_raw_test_average, \
+            efficiency_average
 
 
 

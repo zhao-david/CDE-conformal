@@ -1,6 +1,8 @@
 from .hpd_process import find_interval, inner_hpd_value_level, hpd_coverage,\
-                        profile_density, true_thresholds_out
-from .data_1d import my_bimodal, data_generation, true_cde_out
+                        profile_density, true_thresholds_out, \
+                        find_interval_bins, hpd_grid
+from .data_1d import my_bimodal, my_bimodal_pdf, \
+    data_generation, true_cde_out
 from .data_splitting import stratified_data_splitting
 from .predictionBands_extensions import profile_grouping
 from .pytorch_models_1d import MDNPerceptron, QuantilePerceptron, \

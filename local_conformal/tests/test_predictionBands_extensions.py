@@ -81,5 +81,3 @@ def test_profile_grouping():
     assert np.all(model_static.cluster_centers_ == np.array([[10,10],[0,0]])) or \
            np.all(model_static.cluster_centers_ == np.array([[0,0],[10,10]])),\
         "static clusters are correctly centered"
-
-

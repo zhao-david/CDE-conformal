@@ -62,4 +62,3 @@ def test_average_within_groups():
     assert mipl.shape == (2*4,3) and \
         np.all(mipl.columns == ["grouping", "quantile", "means"]), \
         "expected mean_info_pivot_longer df to have shape and columns as in doc"
-

@@ -132,6 +132,11 @@ def true_cde_out(x_vec, y_grid):
     Returns:
     --------
     cde_mat : numpy array (n,m) with CDE(y_grid[j]|x_vec[i]) value
+
+    Details:
+    --------
+    Naturally the inner working of this function using random variable
+    transformation math.
     """
 
     # returns cde matrix relative to true cde values
@@ -141,31 +146,43 @@ def true_cde_out(x_vec, y_grid):
 
     x_group = np.array(np.round(x_vec), dtype = int)
 
-    x_sigma = np.array((x_vec -1)//4, dtype = int)
 
-    sigma_num = x_sigma.max()
-
-    y_generate_base = [lambda y : scipy.stats.norm(loc = 1,
-                                                   scale = 1).pdf(y),
-        lambda y : scipy.stats.uniform(loc = 1 - np.sqrt(3),
-                                       scale = 1 + np.sqrt(3) - (1 - np.sqrt(3))).pdf(y),
-        lambda y : scipy.stats.expon(loc = 0,scale = 1).pdf(y),
-        my_bimodal_pdf]
-
-    y_generate_all = []
+    sigma_num = np.int((np.max(x_group) + 1)/4)
 
     sigma_values = 4**np.arange(sigma_num)
+    cde_mat = np.zeros((x_vec.shape[0], y_grid.shape[0]))
+    cde_mat2 = np.zeros((x_vec.shape[0], y_grid.shape[0]))
 
-    for sigma_idx in np.arange(sigma_num , dtype = int):
+
+    for group_id in np.arange(sigma_num*4, dtype = int):
+
+        dist_idx = np.int(group_id%4)
+        sigma_idx = np.int(np.floor((group_id)/4))
         current_sigma = sigma_values[sigma_idx]
 
-        for f_idx in np.arange(4, dtype = int):
-            y_generate_all += [lambda y : current_sigma.copy() * y_generate_base.copy()[f_idx](y)]
+        if dist_idx == 0:
+            inner_function = lambda y : 1/current_sigma.copy() * \
+                scipy.stats.norm(loc = 1,
+                                 scale = 1).pdf((y + current_sigma.copy() - 1) /\
+                                          current_sigma.copy())
+        elif dist_idx == 1:
+            inner_function = lambda y : 1/current_sigma.copy() * \
+                    scipy.stats.uniform(loc = 1 - np.sqrt(3),
+                                        scale = 1 + np.sqrt(3) - \
+                                            (1 - np.sqrt(3))
+                                       ).pdf((y + current_sigma.copy() - 1) /\
+                                          current_sigma.copy())
+        elif dist_idx == 2:
+            inner_function = lambda y : 1/current_sigma.copy() * \
+                    scipy.stats.expon(loc = 0,
+                                      scale = 1).pdf((y + current_sigma.copy() - 1) /\
+                                          current_sigma.copy())
+        elif dist_idx == 3:
+            inner_function = lambda y : 1/current_sigma.copy() * \
+                    my_bimodal_pdf((y + current_sigma.copy() - 1) /\
+                                          current_sigma.copy())
 
-    cde_mat = np.zeros((x_vec.shape[0], y_grid.shape[0]))
-
-    for group_id in np.arange(len(y_generate_all)):
-        inner_cde = [y_generate_all[group_id](y_val) for y_val in y_grid]
+        inner_cde = inner_function(y_grid)
         cde_mat[x_group == group_id,:] = inner_cde
 
     return cde_mat
