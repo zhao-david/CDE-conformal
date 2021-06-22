@@ -15,7 +15,7 @@ def difference_validity_and_efficiency(true_cde,
                                        verbose = True):
     """
     Calculates difference in validity and efficiency between predicted and true
-    estimates at an individual level.
+    estimates at an individual level (assumes some smoothness of both cs values).
 
     Arguments:
     ----------
@@ -99,6 +99,13 @@ def difference_validity_and_efficiency(true_cde,
 
     For **efficiency**: we calculate the lebegue set difference beween the
     predicted level set vs the true level set (as defined with `true_grid`)
+
+    Additional Notes:
+    -----------------
+    In this function, the efficiency analysis doesn't work when the true
+    conformal scores are non-continuous (e.g. Uniform distributions with HDP as
+    conformal scores). For uniform distributions in general (cs as CDE or HDP)
+    try `lc.difference_efficiency_uniform`.
     """
 
     # dimension checks -------
@@ -143,9 +150,11 @@ def difference_validity_and_efficiency(true_cde,
     for t_idx in threshold_iter:
         threshold_predict_vec = thresholds_predict[:,t_idx]
 
+        # which part of the grid has a predicted CS score above the prediction based threshold?
         predict_indicator_ge_threshold = predict_grid >= \
             np.repeat(threshold_predict_vec.reshape((-1,1)),
                       predict_grid.shape[1], axis = 1)
+
 
 
         # oracle validity: with the underlying distribution ---------
@@ -161,6 +170,7 @@ def difference_validity_and_efficiency(true_cde,
         threshold_true_vec = thresholds_true[:,t_idx]
 
 
+        # which of the observations should be inside the prediction region...
         true_indicator_ge_threshold = true_grid >= \
             np.repeat(threshold_true_vec.reshape((-1,1)),
                       predict_grid.shape[1], axis = 1)
@@ -194,7 +204,6 @@ def difference_validity_and_efficiency(true_cde,
             efficiency_average
 
 
-
 def difference_actual_validity(df_cs_test, thresholds_mat_test):
     """
     This function should return a binary matrix relative to the groupings
@@ -217,3 +226,140 @@ def difference_actual_validity(df_cs_test, thresholds_mat_test):
     binary_mat = np.repeat(cs_only,n_quant, axis = 1) >= thresholds_mat_test
 
     return binary_mat
+
+
+def difference_efficiency_uniform(true_cde,
+                                  predict_grid,
+                                  true_grid,
+                                  thresholds_predict,
+                                  thresholds_true,
+                                  true_grouping = None,
+                                  expected_prop = .5,
+                                  z_delta = 1,
+                                  verbose = True):
+    """
+    Calculates difference in efficiency between predicted and true
+    estimates at an individual level if the true_cde is a uniform distribution.
+
+    Arguments:
+    ----------
+    true_cde : numpy array (n, p). CDE estimates across a range of z values
+        that are separated by a common `z_delta`. Each row relates to a single
+        observation of a CDE function, and the columns of the array should
+        correspond to the CDE_i(y_j) evaluation.
+    predict_grid : numpy array (n, p). Predicted scores (e.g. HDP, CDE values,
+        etc.) across the same range of z values as `true_cde` with same
+        row/column structure as well
+    true_grid: numpy array (n, p). Same as `predict_grid` but the true scores
+        under the oracle (aka knowing `true_cde`)
+    thresholds_predict : numpy vector (n, m). Threshold cutoffs associated with the
+        predict_grid scores for each row of the above arrays (`true_cde`,
+        `predict_grid`, `true_grid`). The columns are associated with difference
+        cutoffs.
+    thresholds_true : numpy vector (n, m). Threshold cutoffs associated with the
+        true_grid scores for each row of the above arrays (`true_cde`,
+        `predict_grid`, `true_grid`). The columns are associated with difference
+        cutoffs.
+    true_grouping : numpy vector (n, ) vector of discrete grouping values
+        relative to how to evaluate preformance per groups. **NOTE: this is
+        not the same as the model estimated grouping.** Default of None means
+        this part of the analysis is not done.
+    expected_prop : numpy vector (m,). Amount of mass expected to be contained
+        in each level set defined by columns of `thresholds`
+    z_delta : difference between the range of z values used to create above
+        arrays (`true_cde`, `predict_grid`, `true_grid`)
+    verbose : boolean, logic if we should report progress of analysis
+
+    Returns:
+    --------
+    Depending upon `true_grouping == None` you will recieve either:
+
+    (this is observation based (n) ):
+
+        efficiency_error : numpy array (n, m). For each row (i) of the above
+            numpy matrices, we look at the lebegue measure of the set difference
+            between predicted level set and the true level set.
+
+    -OR-
+
+    (this is group based (n) ):
+
+        efficiency_average : pandas DF (n_groups * m, 3), in the pivot_longer
+            style of a data frame. For each row, we include the "grouping",
+            a "quantile" value, and the "means" (mean) of the lebegue
+            measure of the set difference between the optimal true level set
+            and the estimated level set.
+
+    Details:
+    --------
+    For **efficiency**: we calculate the lebegue set difference beween the
+    predicted level set vs the true level set (as defined with `true_grid`)
+
+    """
+    # dimension checks -------
+
+    assert true_cde.shape == predict_grid.shape and \
+        true_cde.shape == true_grid.shape, \
+        "dimensions of true_cde, predict_grid and true_grid should be the same"
+
+    assert thresholds_predict.shape[1] == expected_prop.shape[0] and \
+        thresholds_predict.shape == thresholds_true.shape, \
+        "number of columns of thresholds_{predict, true} should be the same "+\
+        "as the length of expected_prop"
+
+    assert thresholds_predict.shape[0] == true_cde.shape[0], \
+        "thresholds_{predict, true} should have the same number of rows as "+\
+        "true_cde"
+
+    # verbosity design (across thresholds) ---------
+    if verbose:
+        bar = progressbar.ProgressBar(widgets = [ progressbar.Bar(),
+                                              ' (', progressbar.ETA(), ", ",
+                                              progressbar.Timer(), ')'])
+        threshold_iter = bar(np.arange(thresholds_predict.shape[1]))
+    else:
+        threshold_iter = range(thresholds_predict.shape[1])
+
+    efficiency_error = -1 * np.ones((true_cde.shape[0],
+                                     thresholds_predict.shape[1]))
+
+    if np.any(thresholds_true <= 0):
+            warning("a uniform threshold is below 0..."+\
+                    "we are assuming that cs values for with"+\
+                    "non-zero prob have cs above 0")
+
+    for t_idx in threshold_iter:
+        threshold_predict_vec = thresholds_predict[:,t_idx]
+
+        # which part of the grid has a predicted CS score above the prediction based threshold?
+        predict_indicator_ge_threshold = predict_grid >= \
+            np.repeat(threshold_predict_vec.reshape((-1,1)),
+                      predict_grid.shape[1], axis = 1)
+
+        # oracle validity: with the underlying distribution ---------
+        expected_p = expected_prop[t_idx]
+
+        mask_cde_value = true_cde * predict_indicator_ge_threshold
+
+        # efficiency: compared to truth optimal set ---------
+        threshold_true_vec = thresholds_true[:,t_idx]
+
+        # which of the observations should be inside the prediction region...
+
+        unif_value = true_cde.max(axis = 1)
+
+        mass_of_intersect = (true_cde*predict_indicator_ge_threshold).sum(axis = 1)*z_delta
+
+        error_in_mass_of_intersect = np.abs(mass_of_intersect - expected_p)
+
+        # now get error in lebegue distance
+        efficiency_error[:, t_idx] = error_in_mass_of_intersect/unif_value
+
+    if true_grouping is None:
+        return efficiency_error
+    else:
+        _, efficiency_average = lc.average_within_groups(true_grouping,
+                                                      efficiency_error)
+
+
+        return efficiency_average

@@ -11,7 +11,7 @@ from .pytorch_models_1d import MDNPerceptron, QuantilePerceptron, \
 from .grouping import thresholds_per_group, average_within_groups
 
 from .validity_and_efficiency import difference_validity_and_efficiency, \
-                                    difference_actual_validity
-
+                                    difference_actual_validity, \
+                                    difference_efficiency_uniform
 
 from .plotnine_arrangement_extensions import gg2img, arrangegrob
